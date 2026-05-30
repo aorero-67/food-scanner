@@ -1,0 +1,67 @@
+/* Ultra-Minimalist Modern Light Theme */
+:root {
+    color-scheme: light; /* Force light mode across devices */
+}
+
+body {
+    background-color: #ffffff !important; /* Force true white background for consistency */
+    color: #0f172a;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+/* ThreeJS Canvas Container */
+#bg-3d {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1; /* Explicitly place behind everything */
+    pointer-events: none;
+    opacity: 1; /* Model opacity is handled in JS */
+}
+
+#bg-3d canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+    outline: none;
+}
+
+/* Clean Glass Panel - High Transparency */
+.minimal-glass {
+    background: rgba(255, 255, 255, 0.15) !important; /* Very transparent */
+    backdrop-filter: blur(8px) !important; /* Lower blur to see background clearly */
+    -webkit-backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+}
+
+/* Minimalist Button */
+.btn-lux {
+    background: #0f172a; /* Slate 900 */
+    color: #ffffff;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+}
+
+.btn-lux:hover {
+    transform: translateY(-2px);
+    background: #1e293b; /* Slate 800 */
+    box-shadow: 0 10px 20px -5px rgba(15, 23, 42, 0.2);
+}
+
+.btn-lux:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px -3px rgba(15, 23, 42, 0.2);
+}
+
+/* Reticle styling for light theme */
+.reticle-corner {
+    width: 24px;
+    height: 24px;
+    border-color: rgba(255, 255, 255, 0.95);
+    transition: all 0.3s ease;
+}
