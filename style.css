@@ -1,0 +1,36 @@
+/* Minimalist Luxury Styles */
+body {
+    background-color: #050505; /* Deep rich black for luxury feel */
+    color: #fafafa;
+}
+
+.minimal-glass {
+    background: rgba(255, 255, 255, 0.02);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.btn-lux {
+    background: #ffffff;
+    color: #000000;
+    transition: all 0.3s ease;
+}
+
+.btn-lux:hover {
+    background: #e5e5e5;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px -5px rgba(255, 255, 255, 0.1);
+}
+
+.btn-lux:active {
+    transform: translateY(0);
+}
+
+/* Reticle styling for minimal look */
+.reticle-corner {
+    width: 20px;
+    height: 20px;
+    border-color: rgba(255, 255, 255, 0.7);
+    transition: all 0.3s ease;
+}
