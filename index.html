@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="color-scheme" content="light">
+    <title>FreshScan | Ultra Minimalist 3D</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Outfit', 'Noto Sans Thai', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Three.js for 3D Background -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 antialiased bg-white text-slate-800">
+
+    <!-- 3D Background Container -->
+    <div id="bg-3d"></div>
+
+    <!-- Main Container -->
+    <!-- Highly transparent glass to show 3D behind it clearly -->
+    <main class="relative z-10 w-full max-w-md minimal-glass rounded-[2rem] overflow-hidden flex flex-col">
+        
+        <!-- Header Minimalist -->
+        <header class="pt-8 pb-4 px-8 flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-medium tracking-wide uppercase text-slate-900">FreshScan</h1>
+                <p class="text-[10px] font-bold text-slate-500 tracking-widest uppercase mt-1">Food Quality Analysis</p>
+            </div>
+            
+            <!-- Camera Switch Button -->
+            <button onclick="toggleCamera()" class="p-2.5 rounded-full bg-white/80 border border-white shadow-sm hover:bg-white transition-colors active:scale-95 backdrop-blur-sm" title="สลับกล้อง">
+                <svg class="w-5 h-5 text-slate-800" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+            </button>
+        </header>
+
+        <!-- Camera Viewport -->
+        <div class="px-6 py-2 relative">
+            <div class="relative w-full aspect-[3/4] rounded-[1.5rem] overflow-hidden border border-white/80 shadow-md bg-white/40 backdrop-blur-sm">
+                <video id="camera-stream" autoplay playsinline class="object-cover w-full h-full transition-opacity duration-500"></video>
+                
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/10 to-transparent pointer-events-none"></div>
+                
+                <!-- Minimalist Target Reticle -->
+                <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div class="relative w-24 h-24">
+                        <!-- Corners -->
+                        <div class="absolute top-0 left-0 reticle-corner border-t-[2px] border-l-[2px] rounded-tl-sm"></div>
+                        <div class="absolute top-0 right-0 reticle-corner border-t-[2px] border-r-[2px] rounded-tr-sm"></div>
+                        <div class="absolute bottom-0 left-0 reticle-corner border-b-[2px] border-l-[2px] rounded-bl-sm"></div>
+                        <div class="absolute bottom-0 right-0 reticle-corner border-b-[2px] border-r-[2px] rounded-br-sm"></div>
+                        
+                        <!-- Center dot -->
+                        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full shadow-md"></div>
+                    </div>
+                </div>
+
+                <!-- Status Badge -->
+                <div class="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-white/90 backdrop-blur-md border border-white shadow-sm flex items-center space-x-2">
+                    <div class="w-1.5 h-1.5 rounded-full bg-slate-500 animate-pulse-slow"></div>
+                    <span class="text-[9px] font-bold tracking-widest text-slate-700 uppercase">Scanner Active</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls & Dashboard -->
+        <div class="p-6 flex flex-col space-y-4">
+            
+            <!-- Result Panel -->
+            <div id="result-dashboard" class="bg-white/40 backdrop-blur-md border border-white/80 shadow-sm rounded-2xl p-5 transition-all duration-500 ease-out min-h-[95px] flex flex-col justify-center relative overflow-hidden">
+                <h3 class="text-[9px] font-bold tracking-[0.25em] text-slate-500 uppercase mb-1">Status</h3>
+                <p id="status-text" class="text-sm font-medium text-slate-800">Waiting for analysis...</p>
+                
+                <div id="color-details" class="mt-3 flex items-center space-x-3 opacity-0 transition-opacity duration-300 h-0 overflow-hidden">
+                    <div id="color-preview" class="w-4 h-4 rounded-full border border-slate-300 shadow-sm"></div>
+                    <p id="rgb-value" class="text-[10px] font-mono font-medium text-slate-600 tracking-wider"></p>
+                </div>
+            </div>
+
+            <!-- Scan Button -->
+            <button id="scan-btn" onclick="scanColor()" 
+                class="btn-lux w-full py-4 rounded-2xl font-bold tracking-[0.15em] text-[11px] uppercase flex items-center justify-center space-x-2">
+                <span>Analyze Quality</span>
+            </button>
+            
+        </div>
+    </main>
+
+    <script>
+        // --- 3D Background Logic ---
+        function init3DBackground() {
+            const container = document.getElementById('bg-3d');
+            const scene = new THREE.Scene();
+            
+            const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            const renderer = new THREE.WebGLRenderer({ alpha: false, antialias: true });
+            renderer.setClearColor(0xffffff, 1); // Pure white background
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            // Create base shape
+            const baseGeometry = new THREE.SphereGeometry(15, 16, 16);
+            
+            // Distort into an Apple shape FIRST
+            const posAttr = baseGeometry.attributes.position;
+            const vertex = new THREE.Vector3();
+            for (let i = 0; i < posAttr.count; i++) {
+                vertex.fromBufferAttribute(posAttr, i);
+                
+                // Compress Y to make it squat
+                vertex.y *= 0.85;
+                
+                // Add dimple at top and bottom using distance from center axis
+                const distSq = vertex.x * vertex.x + vertex.z * vertex.z;
+                if (vertex.y > 0) {
+                    const factor = Math.max(0, 1 - distSq / 100);
+                    vertex.y -= factor * 3.5; // Deep top dimple
+                } else {
+                    const factor = Math.max(0, 1 - distSq / 100);
+                    vertex.y += factor * 2; // Bottom dimple
+                }
+                
+                // Minor organic bumps
+                vertex.x += (Math.random() - 0.5) * 0.6;
+                vertex.z += (Math.random() - 0.5) * 0.6;
+                
+                posAttr.setXYZ(i, vertex.x, vertex.y, vertex.z);
+            }
+            baseGeometry.computeVertexNormals();
+
+            // Convert to non-indexed so every triangle is separated (can fly apart)
+            const geometry = baseGeometry.toNonIndexed();
+            
+            // Setup Explode Data
+            const positions = geometry.attributes.position.array;
+            const originalPositions = new Float32Array(positions.length);
+            const explodeVectors = new Float32Array(positions.length);
+            
+            // Each triangle has 3 vertices = 9 floats
+            for (let i = 0; i < positions.length; i += 9) {
+                const v1 = new THREE.Vector3(positions[i], positions[i+1], positions[i+2]);
+                const v2 = new THREE.Vector3(positions[i+3], positions[i+4], positions[i+5]);
+                const v3 = new THREE.Vector3(positions[i+6], positions[i+7], positions[i+8]);
+                
+                // Calculate center of the triangle
+                const center = new THREE.Vector3().add(v1).add(v2).add(v3).divideScalar(3);
+                
+                // The direction to explode is outwards from the center
+                const dir = center.clone().normalize();
+                
+                // Random speeds so some pieces fly further than others
+                const speed = 0.5 + Math.random() * 2.0; 
+                
+                for (let j = 0; j < 9; j += 3) {
+                    originalPositions[i+j] = positions[i+j];
+                    originalPositions[i+j+1] = positions[i+j+1];
+                    originalPositions[i+j+2] = positions[i+j+2];
+                    
+                    explodeVectors[i+j] = dir.x * speed;
+                    explodeVectors[i+j+1] = dir.y * speed;
+                    explodeVectors[i+j+2] = dir.z * speed;
+                }
+            }
+
+            // Core: Solid White inner layer
+            const coreMaterial = new THREE.MeshBasicMaterial({
+                color: 0xffffff,
+                transparent: false
+            });
+            const coreMesh = new THREE.Mesh(geometry, coreMaterial);
+            coreMesh.scale.set(0.98, 0.98, 0.98); // Slightly smaller
+
+            // Shell: High-contrast Dark Wireframe
+            const material = new THREE.MeshBasicMaterial({ 
+                color: 0x0f172a, 
+                wireframe: true,
+                transparent: true,
+                opacity: 0.9 
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+
+            // Group them to rotate together
+            const appleGroup = new THREE.Group();
+            appleGroup.add(coreMesh);
+            appleGroup.add(mesh);
+            appleGroup.scale.set(1.6, 1.6, 1.6);
+            scene.add(appleGroup);
+
+            // Dynamically set camera distance based on screen width
+            function updateCameraDistance() {
+                const aspect = window.innerWidth / window.innerHeight;
+                if (aspect < 0.8) {
+                    camera.position.z = 70; // Mobile
+                } else if (aspect < 1.2) {
+                    camera.position.z = 55; // Tablet
+                } else {
+                    camera.position.z = 45; // Desktop
+                }
+            }
+            updateCameraDistance();
+
+            const clock = new THREE.Clock();
+
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                const time = clock.getElapsedTime();
+                
+                // 1. Dynamic Tumble Rotation (Tumbling on all axes unpredictably)
+                appleGroup.rotation.x = time * 0.4 + Math.sin(time * 0.5) * 0.6;
+                appleGroup.rotation.y = time * 0.5 + Math.cos(time * 0.3) * 0.8;
+                appleGroup.rotation.z = Math.sin(time * 0.2) * 0.5;
+                
+                // 2. Explode and Implode Animation
+                // Sine wave normalized to 0-1
+                let explodeFactor = (Math.sin(time * 2.0) + 1) / 2; 
+                // Power curve makes it stay whole longer, then rapidly snap apart and back
+                explodeFactor = Math.pow(explodeFactor, 4); 
+                
+                const maxDisplacement = 25; // How far pieces fly
+                const currentDisp = explodeFactor * maxDisplacement;
+                
+                // Update vertex positions
+                const posAttr = geometry.attributes.position;
+                for (let i = 0; i < posAttr.array.length; i++) {
+                    posAttr.array[i] = originalPositions[i] + explodeVectors[i] * currentDisp;
+                }
+                posAttr.needsUpdate = true;
+                
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                updateCameraDistance();
+            });
+        }
+        
+        window.addEventListener('DOMContentLoaded', init3DBackground);
+
+        // --- App Logic ---
+        const videoElement = document.getElementById('camera-stream');
+        const resultDashboard = document.getElementById('result-dashboard');
+        const statusText = document.getElementById('status-text');
+        const colorDetails = document.getElementById('color-details');
+        const rgbValueText = document.getElementById('rgb-value');
+        const colorPreview = document.getElementById('color-preview');
+
+        let currentFacingMode = "environment";
+        let currentStream = null;
+
+        async function startCamera() {
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+            videoElement.style.opacity = '0';
+            try {
+                currentStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: currentFacingMode },
+                    audio: false
+                });
+                videoElement.srcObject = currentStream;
+                videoElement.onloadedmetadata = () => {
+                    videoElement.style.opacity = '1';
+                };
+            } catch (error) {
+                console.error("Camera error: ", error);
+                statusText.innerHTML = "Camera Access Denied<br><span class='text-[10px] text-slate-500 font-normal tracking-wide'>Please check permissions or use HTTPS.</span>";
+            }
+        }
+
+        function toggleCamera() {
+            if (navigator.vibrate) navigator.vibrate(20);
+            currentFacingMode = currentFacingMode === "environment" ? "user" : "environment";
+            startCamera();
+        }
+
+        function rgbToHsl(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            if (max === min) { h = s = 0; } 
+            else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+                    case g: h = (b - r) / d + 2; break;
+                    case b: h = (r - g) / d + 4; break;
+                }
+                h /= 6;
+            }
+            return [h * 360, s * 100, l * 100];
+        }
+
+        function scanColor() {
+            if (navigator.vibrate) navigator.vibrate(40);
+            if (!videoElement.videoWidth) return;
+
+            videoElement.style.opacity = '0.3';
+            setTimeout(() => videoElement.style.opacity = '1', 200);
+
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d', { willReadFrequently: true });
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+            
+            const boxSize = 12;
+            const centerX = Math.floor(canvas.width / 2);
+            const centerY = Math.floor(canvas.height / 2);
+            const imageData = context.getImageData(centerX - boxSize/2, centerY - boxSize/2, boxSize, boxSize);
+            const data = imageData.data;
+            
+            let r = 0, g = 0, b = 0;
+            const count = boxSize * boxSize;
+            
+            for (let i = 0; i < data.length; i += 4) {
+                r += data[i]; g += data[i+1]; b += data[i+2];
+            }
+            r = Math.round(r / count); g = Math.round(g / count); b = Math.round(b / count);
+
+            analyzeColor(r, g, b);
+        }
+
+        function analyzeColor(r, g, b) {
+            const [h, s, l] = rgbToHsl(r, g, b);
+            
+            colorDetails.style.height = 'auto';
+            colorDetails.style.opacity = '1';
+            colorPreview.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+            rgbValueText.innerText = `R${r} G${g} B${b} • H${Math.round(h)} S${Math.round(s)} L${Math.round(l)}`;
+            
+            const isRed = (h < 35 || h > 330) && s > 20 && l > 15 && l < 85;
+            const isGreen = h >= 60 && h <= 160 && s > 20 && l > 15 && l < 85;
+
+            if (isGreen) {
+                statusText.innerText = "อาหารยังไม่บูด (ปลอดภัย)";
+                statusText.className = "text-base font-bold text-emerald-600 mt-1";
+            } else if (isRed) {
+                statusText.innerText = "อาหารบูดแล้ว! (ห้ามรับประทาน)";
+                statusText.className = "text-base font-bold text-red-600 mt-1";
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]); 
+            } else {
+                statusText.innerText = "ไม่สามารถระบุได้ กรุณาเล็งใหม่อีกครั้ง";
+                statusText.className = "text-sm font-medium text-slate-500 mt-1";
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', startCamera);
+    </script>
+</body>
+</html>
